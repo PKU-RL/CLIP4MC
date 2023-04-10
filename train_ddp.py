@@ -23,10 +23,10 @@ _time = time.strftime("%y_%m_%d_%H:%M:%S", time.localtime())
 local_rank = torch.distributed.get_rank()
 n_gpu = torch.distributed.get_world_size()
 
-assert local_rank == int(os.environ['LOCAL_RANK']), "local_rank {} is not equal to os.environ['LOCAL_RANK'] {}".format(
-    local_rank, os.environ['LOCAL_RANK'])
-assert n_gpu == int(os.environ['WORLD_SIZE']), "n_gpu {} is not equal to os.environ['WORLD_SIZE'] {}".format(n_gpu,
-    os.environ['WORLD_SIZE'])
+assert local_rank == int(os.environ['LOCAL_RANK']), \
+    "local_rank {} is not equal to os.environ['LOCAL_RANK'] {}".format(local_rank, os.environ['LOCAL_RANK'])
+assert n_gpu == int(os.environ['WORLD_SIZE']), \
+    "n_gpu {} is not equal to os.environ['WORLD_SIZE'] {}".format(n_gpu, os.environ['WORLD_SIZE'])
 
 output_dir = os.path.join('./ckpt', _time)
 if not os.path.exists(output_dir):
@@ -41,18 +41,21 @@ def get_args(description='MineCLIP args'):
     parser.add_argument('--seed', type=int, default=42, help='random seed')
     parser.add_argument('--n_display', type=int, default=10, help='display step')
 
-    parser.add_argument('--dataset_log_file',type=str, default='./Youtube_dataset/log.json', help='dataset log file of data paths')
-    parser.add_argument('--use_pretrain', type=bool, default=True, help='use pretrain model')
-    parser.add_argument('--pretrain_model_path', type=str, default="./ViT-B-16.pt", help='pretrain model path')
-    parser.add_argument('--model_type', type=str, default='CLIP4MC', choices=['CLIP4MC','CLIP4MC_simple','MineCLIP'])
-    
+    parser.add_argument('--dataset_log_file', type=str, default='./Youtube_dataset/log.json',
+                        help='dataset log file of data paths')
+    parser.add_argument('--use_pretrained_CLIP', action='store_true', default=False, help='use pretrained CLIP model')
+    parser.add_argument('--pretrain_CLIP_path', type=str, default="./ViT-B-16.pt", help='pretrained CLIP model path')
+    parser.add_argument('--use_pretrained_model', action='store_true', default=False, help='use pretrained model')
+    parser.add_argument('--pretrain_model_path', type=str, default="./CLIP4MC.pt", help='pretrained model path')
+    parser.add_argument('--model_type', type=str, default='CLIP4MC', choices=['CLIP4MC', 'CLIP4MC_simple', 'MineCLIP'])
+
     parser.add_argument('--clip_frame_num', type=int, default=16, help='frame num for each shorter clip')
     parser.add_argument('--clip_frame_stride', type=int, default=8, help='frame stride for each shorter clip')
-    
+
     parser.add_argument('--use_mask', action='store_true', default=False, help='data process name')
     parser.add_argument('--batch_size', type=int, default=400, help='batch size')
     parser.add_argument('--num_workers', type=int, default=8, help='num workers')
-    parser.add_argument('--batch_size_val', type=int, default=400, help='batch size val')
+    parser.add_argument('--batch_size_eval', type=int, default=400, help='batch size evaluate')
 
     parser.add_argument('--epochs', type=int, default=40, help='epochs')
     parser.add_argument('--optimizer_name', type=str, default="BertAdam", help='optimizer name')
@@ -60,7 +63,7 @@ def get_args(description='MineCLIP args'):
     parser.add_argument('--lr', type=float, default=1.5e-4, help='initial learning rate')
     parser.add_argument('--layer_wise_lr_decay', type=float, default=0.65, help='coefficient for bert branch.')
     parser.add_argument('--weight_decay', type=float, default=0.2, help='Learning rate exp epoch decay')
-    parser.add_argument("--warmup_proportion", default=0.005, type=float, help="Epoch of training to perform linear learning rate warmup for.")
+    parser.add_argument("--warmup_proportion", default=0.005, type=float, help="Warmup proportion")
     parser.add_argument('--max_grad_norm', type=float, default=1.0, help='max grad norm')
 
     parser.add_argument('--text_freeze_layer', type=int, default=11, help='text encoder freeze layer')
@@ -180,14 +183,14 @@ def eval_epoch(model, test_dataloader, writer, epoch, device):
 
             logger.info("Video-to-Text:")
             logger.info('\t>>>  V2T$R@1: {:.1f} - V2T$R@5: {:.1f} - V2T$R@10: {:.1f}'
-                            ' - V2T$Median R: {:.1f} - V2T$Mean R: {:.1f}'.
-                            format(vt_metrics['R1'], vt_metrics['R5'], vt_metrics['R10'],
-                                   vt_metrics['MedianR'], vt_metrics['MeanR']))
+                        ' - V2T$Median R: {:.1f} - V2T$Mean R: {:.1f}'.
+                        format(vt_metrics['R1'], vt_metrics['R5'], vt_metrics['R10'],
+                               vt_metrics['MedianR'], vt_metrics['MeanR']))
             logger.info("Text-to-Video:")
             logger.info('\t>>>  T2V$R@1: {:.1f} - T2V$R@5: {:.1f} - T2V$R@10: {:.1f}'
-                            ' - T2V$Median R: {:.1f} - T2V$Mean R: {:.1f}'.
-                            format(tv_metrics['R1'], tv_metrics['R5'], tv_metrics['R10'],
-                                   tv_metrics['MedianR'], tv_metrics['MeanR']))
+                        ' - T2V$Median R: {:.1f} - T2V$Mean R: {:.1f}'.
+                        format(tv_metrics['R1'], tv_metrics['R5'], tv_metrics['R10'],
+                               tv_metrics['MedianR'], tv_metrics['MeanR']))
 
             for k, v in tv_metrics.items():
                 writer.add_scalar("V2T_{}/{}".format('all', k), v, epoch)
@@ -214,7 +217,7 @@ def main(args):
         with open(os.path.join(output_dir, 'args.json'), 'w') as f:
             json.dump(args.__dict__, f, indent=2)
         os.system('cp {} {}'.format('config.yaml', output_dir))
-        
+
         writer_dir = os.path.join(output_dir, 'runs')
         logger.info("writer_dir: {}".format(writer_dir))
         train_writer = SummaryWriter(os.path.join(writer_dir, 'train'))
@@ -224,12 +227,12 @@ def main(args):
         test_writer = None
 
     # Setup Model
-    if args.use_pretrain:
+    if args.use_pretrained_CLIP and not args.use_pretrained_model:
         if local_rank == 0:
-            logger.info("Loading pretrain model from {}".format(args.pretrain_model_path))
-        pretrained_model = torch.jit.load(args.pretrain_model_path)
+            logger.info("Loading pretrained clip from {}".format(args.pretrain_CLIP_path))
+        pretrained_clip = torch.jit.load(args.pretrain_CLIP_path)
     else:
-        pretrained_model = None
+        pretrained_clip = None
 
     if args.model_type == 'CLIP4MC':
         model = CLIP4MC(frame_num=args.clip_frame_num,
@@ -237,28 +240,32 @@ def main(args):
                         share_adapter=True,
                         use_action=False,
                         use_brief_text=False,
-                        pretrained_clip=pretrained_model,)
+                        pretrained_clip=pretrained_clip, )
     elif args.model_type == 'CLIP4MC_simple':
         model = CLIP4MC_simple(frame_num=args.clip_frame_num,
-                                share_sequence_encoder=True,
-                                share_adapter=True,
-                                use_action=False,
-                                use_brief_text=False,
-                                pretrained_clip=pretrained_model,)
+                               share_sequence_encoder=True,
+                               share_adapter=True,
+                               use_action=False,
+                               use_brief_text=False,
+                               pretrained_clip=pretrained_clip)
     elif args.model_type == 'MineCLIP':
         model = NaiveCLIP(frame_num=args.clip_frame_num,
-                          clip_stride=args.clip_frame_stride,
-                          pretrained_clip=pretrained_model)
+                          pretrained_clip=pretrained_clip)
     else:
         raise NotImplementedError
-    
+
+    if args.use_pretrained_model:
+        if local_rank == 0:
+            logger.info("Loading pretrained model from {}".format(args.pretrain_model_path))
+        model.load_state_dict(torch.load(args.pretrain_model_path))
+
     model = model.to(device)
 
     # Setup dataset
     train_dataloader, train_sampler, train_length \
         = get_naive_dataloader(args.dataset_log_file, args.use_mask, args.batch_size, 'train', args.num_workers)
     test_dataloader, test_sampler, test_length \
-        = get_naive_dataloader(args.dataset_log_file, args.use_mask, args.batch_size_val, 'test', args.num_workers)
+        = get_naive_dataloader(args.dataset_log_file, args.use_mask, args.batch_size_eval, 'test', args.num_workers)
 
     num_train_optimization_steps = train_length // args.batch_size * args.epochs
 
@@ -269,7 +276,7 @@ def main(args):
         logger.info("  Num steps = %d", num_train_optimization_steps)
         logger.info("***** Running test *****")
         logger.info("  Num examples = %d", test_length)
-        logger.info("  Batch size = %d", args.batch_size_val)
+        logger.info("  Batch size = %d", args.batch_size_eval)
         logger.info("  Num steps = %d", len(test_dataloader))
 
     # Prepare optimizer
@@ -293,7 +300,7 @@ def main(args):
     # Train!
     global_step = 0
     for epoch in range(args.epochs):
-        train_sampler.set_epoch(epoch)
+        # train_sampler.set_epoch(epoch)
         test_sampler.set_epoch(epoch)
         tr_loss, global_step = train_epoch(epoch, args, model, train_dataloader, device, optimizer,
                                            scheduler, global_step)

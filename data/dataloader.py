@@ -8,21 +8,22 @@ from .dataset import NaiveDataset
 def get_naive_dataloader(dataset_log_file: str,
                          use_mask: bool,
                          batch_size: int,
-                         dataset: Literal["train", "val", "test"] = None,
+                         dataset: Literal["train", "test"] = None,
                          num_workers: int = 8):
     """
     Get a naive dataloader of processed data.
 
     Args:
-        process_name: data process type.
+        dataset_log_file: path to the dataset log file.
+        use_mask: whether to use entity mask and action mask of text input.
         batch_size: batch size.
-        dataset: which dataset to use, train, val or test.
+        dataset: which dataset to use, train or test.
         num_workers: number of workers.
 
     Returns:
         A naive dataloader of processed data.
     """
-    naive_dataset = NaiveDataset(dataset_log_file,use_mask,dataset)
+    naive_dataset = NaiveDataset(dataset_log_file, use_mask, dataset)
 
     if torch.distributed.is_available() and torch.distributed.is_initialized():
         naive_sampler = torch.utils.data.distributed.DistributedSampler(naive_dataset, shuffle=(dataset == 'train'))

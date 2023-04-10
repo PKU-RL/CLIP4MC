@@ -41,6 +41,10 @@ class CLIP4MC(nn.Module):
         """
         Args:
             frame_num:  number of frames in a video clip
+            share_sequence_encoder: whether to share temporal encoders
+            share_adapter: whether to share adapters
+            use_brief_text: whether to use brief text [entity mask | action mask] for alignment
+            use_action: whether to use action mask for alignment
             pretrained_clip: pretrained clip model
         """
 
@@ -109,7 +113,6 @@ class CLIP4MC(nn.Module):
         self.use_brief_text = use_brief_text
         self.trans_layernorm = torch.nn.LayerNorm(512)
 
-
         self.loss_fct = CrossEn()
 
     def get_layer(self, layer: int, layer_type: Literal['video', 'text', 'cross']):
@@ -145,43 +148,40 @@ class CLIP4MC(nn.Module):
         B, T, D = frame_embedding.shape
         video_embedding = self.temporal_encoder(frame_embedding)
         # (batch*frames-1, 2, embed_dim)
-        
+
         consequence_embedding = torch.stack((motion_frame_embedding[:, 1:], motion_frame_embedding[:, :-1]),
                                             dim=2).reshape(-1, 2, D)
         # (batch, frames-1, embed_dim)
         consequence_embedding2 = torch.stack((motion_frame_embedding[:, 2:], motion_frame_embedding[:, :-2]),
-                                            dim=2).reshape(-1, 2, D)
+                                             dim=2).reshape(-1, 2, D)
         consequence_embedding4 = torch.stack((motion_frame_embedding[:, 4:], motion_frame_embedding[:, :-4]),
-                                            dim=2).reshape( -1, 2, D)
+                                             dim=2).reshape(-1, 2, D)
         consequence_embedding8 = torch.stack((motion_frame_embedding[:, 3:], motion_frame_embedding[:, :-3]),
-                                            dim=2).reshape(-1, 2, D)
-        
-        
-        
-        
+                                             dim=2).reshape(-1, 2, D)
+
         difference_embedding = self.difference_encoder(consequence_embedding).reshape(B, -1, D)
         difference_embedding2 = self.difference_encoder(consequence_embedding2).reshape(B, -1, D)
         difference_embedding4 = self.difference_encoder(consequence_embedding4).reshape(B, -1, D)
         difference_embedding8 = self.difference_encoder(consequence_embedding8).reshape(B, -1, D)
-        
+
         motion_embedding = self.temporal_difference_encoder(difference_embedding)  # (batch, embed_dim)
         motion_embedding2 = self.temporal_difference_encoder(difference_embedding2)
         motion_embedding4 = self.temporal_difference_encoder(difference_embedding4)
         motion_embedding8 = self.temporal_difference_encoder(difference_embedding8)
 
         video_embedding = self.video_adapter(video_embedding)  # (batch, embed_dim)
-    
-        motion_embedding = torch.stack([motion_embedding, motion_embedding2, motion_embedding4, motion_embedding8],1)
+
+        motion_embedding = torch.stack([motion_embedding, motion_embedding2, motion_embedding4, motion_embedding8], 1)
         motion_embedding = self.temporal_encoder2(motion_embedding)
         motion_embedding = 2 * self.sigmoid(self.trans_layernorm(motion_embedding)) - 1
         motion_embedding = self.motion_adapter(motion_embedding)  # (batch, embed_dim)
-        
+
         video_embedding = video_embedding / video_embedding.norm(dim=-1, keepdim=True)
         motion_embedding = motion_embedding / motion_embedding.norm(dim=-1, keepdim=True)
 
         return video_embedding, motion_embedding
 
-    def get_text_embedding(self, text, entity_mask = None, action_mask=None):
+    def get_text_embedding(self, text, entity_mask=None, action_mask=None):
         if self.use_action or self.use_brief_text:
             action_mask = action_mask.bool()
             entity_mask = entity_mask.bool()
@@ -219,14 +219,13 @@ class CLIP4MC(nn.Module):
             logit1 = self.logit_sacle.exp() * video_embedding @ text_embedding.t()
             logit2 = self.logit_sacle.exp() * motion_embedding @ text_embedding.t()
         return (logit1, logit2) if not eval else (logit1 + logit2)
-    
+
     def forward(self, video, text, entity_mask=None, action_mask=None, motion_input=None, train=False, all_gather=True):
         # video: (batch, frames, channels, height, width)
         # text: (batch, tokens)
 
         frame_embedding = self.get_image_embedding(video)  # (batch, frames, embed_dim)
         if motion_input is not None:
-            #print('ww')
             motion_frame_embedding = self.get_image_embedding(motion_input)  # (batch, frames, embed_dim)
             video_embedding, motion_embedding = self.get_video_embedding(frame_embedding, motion_frame_embedding)
         else:
@@ -255,10 +254,11 @@ class CLIP4MC(nn.Module):
                 m2t_matrix = motion_embedding @ text_embedding.t()
             m2t_matrix = self.logit_scale.exp() * m2t_matrix
             t2m_matrix = m2t_matrix.t()
-            loss = (self.loss_fct(v2t_matrix) + self.loss_fct(t2v_matrix) +  10 * self.loss_fct(m2t_matrix) + 10 * self.loss_fct(t2m_matrix)) / 4
+            loss = (self.loss_fct(v2t_matrix) + self.loss_fct(t2v_matrix) + 10 * self.loss_fct(
+                m2t_matrix) + 10 * self.loss_fct(t2m_matrix)) / 4
             return loss
         else:
-            video_features = [self.logit_scale.exp()*video_embedding, self.logit_scale.exp()*motion_embedding]
+            video_features = [self.logit_scale.exp() * video_embedding, self.logit_scale.exp() * motion_embedding]
             text_features = text_embedding if not self.use_action else [text_embedding, action_embedding]
             return video_features, text_features
 
@@ -268,4 +268,3 @@ class CLIP4MC(nn.Module):
         Follow OpenAI CLIP paper's trick to prevent training instability (sec 2.5)
         """
         self.logit_scale.data.clamp_(-np.log(value), np.log(value))
-

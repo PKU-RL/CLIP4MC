@@ -10,7 +10,7 @@ import numpy as np
 from typing import *
 
 from module import build_GPT, build_ViT, build_logit_scale, build_adapter, build_sequence_encoder, CrossEn, \
-                    AllGather
+    AllGather
 
 allgather = AllGather.apply
 
@@ -55,26 +55,26 @@ class NaiveCLIP(nn.Module):
             if layer == 0:
                 return self.logit_scale,
         return []
-    
+
     def get_image_embedding(self, image):
         return self.vit(image)
-    
+
     def get_video_embedding(self, frame_embedding):
         video_embedding = self.temporal_encoder(frame_embedding)
         video_embedding = self.video_adapter(video_embedding)
         video_embedding = video_embedding / video_embedding.norm(dim=-1, keepdim=True)
         return video_embedding
 
-    def get_text_embedding(self,text,entity_mask=None,action_mask=None):
+    def get_text_embedding(self, text, entity_mask=None, action_mask=None):
         text_embedding = self.gpt(text)
         text_embedding = self.text_adapter(text_embedding)
         text_embedding = text_embedding / text_embedding.norm(dim=-1, keepdim=True)
         return text_embedding
-    
-    def get_logits(self,video_features,text_features,eval=False):
+
+    def get_logits(self, video_features, text_features, eval=False):
         return self.logit_scale.exp() * video_features @ text_features.t()
-    
-    def forward(self, video, text, train=False, all_gather=True):
+
+    def forward(self, video, text, entity_mask=None, action_mask=None, train=False, all_gather=True):
         # video: (batch, frames, channels, height, width)
         # text: (batch, tokens)
         frame_embedding = self.get_image_embedding(video)  # (batch, frames, embed_dim)

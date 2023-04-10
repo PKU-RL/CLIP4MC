@@ -42,6 +42,10 @@ class CLIP4MC_simple(nn.Module):
         """
         Args:
             frame_num:  number of frames in a video clip
+            share_sequence_encoder: whether to share temporal encoders
+            share_adapter: whether to share adapters
+            use_brief_text: whether to use brief text [entity mask | action mask] for alignment
+            use_action: whether to use action mask for alignment
             pretrained_clip: pretrained clip model
         """
 
@@ -107,7 +111,7 @@ class CLIP4MC_simple(nn.Module):
         self.frame_num = frame_num
         self.use_action = use_action
         self.use_brief_text = use_brief_text
-        
+
         self.video_loss_fct = CrossEn()
         self.motion_loss_fct = CrossEn()
 
@@ -205,7 +209,7 @@ class CLIP4MC_simple(nn.Module):
         # text: (batch, tokens)
 
         frame_embedding = self.get_image_embedding(video)  # (batch, frames, embed_dim)
-        
+
         if motion_input is not None:
             motion_frame_embedding = self.get_image_embedding(motion_input)  # (batch, frames, embed_dim)
             video_embedding, motion_embedding = self.get_video_embedding(frame_embedding, motion_frame_embedding)

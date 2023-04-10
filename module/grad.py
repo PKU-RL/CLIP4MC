@@ -27,22 +27,6 @@ def prior_dist(x: int, device: torch.device, dtype: torch.dtype = torch.float32)
     return ans.log()
 
 
-class MultiCrossEn(nn.Module):
-    def __init__(self, ):
-        super(MultiCrossEn, self).__init__()
-
-    def forward(self, sim_matrix):
-        _, N, _ = sim_matrix.shape
-        pt = sim_matrix.softmax(dim=-1) + 1e-8  # [B,N,B]
-        logpt = pt.log()
-        logpt = torch.diagonal(logpt, dim1=0, dim2=2).t()  # [B,N]
-
-        pd_logpt = prior_dist(N, device=sim_matrix.device, dtype=sim_matrix.dtype)  # [N]
-        nce_loss = ((pd_logpt - logpt).abs())  # [B,N]
-        sim_loss = nce_loss.mean()
-        return sim_loss
-
-
 class AllGather(torch.autograd.Function):
     """An autograd function that performs allgather on a tensor."""
 

@@ -1,7 +1,6 @@
 from typing import *
-import random
+
 import torch
-import numpy as np
 from torch.utils.data import Dataset
 
 from .process import get_processed_len, load_processed_data
@@ -9,12 +8,13 @@ from .process import torch_normalize, image_transform
 
 
 class NaiveDataset(Dataset):
-    def __init__(self, dataset_log_file: str, use_mask: bool=True, dataset: Literal["train", "val", "test"] = None):
+    def __init__(self, dataset_log_file: str, use_mask: bool = True, dataset: Literal["train", "test"] = None):
         """
         Build a naive dataset of processed data.
 
         Args:
-            process_name: data process type.
+            dataset_log_file: path to the dataset log file.
+            use_mask: whether to use entity mask and action mask of text input.
             dataset: which dataset to use, train, val or test.
         """
         self.dataset = dataset
@@ -31,7 +31,7 @@ class NaiveDataset(Dataset):
         video = torch.as_tensor(video)
         video = video.permute(0, 3, 1, 2)
 
-        if self.dataset == 'train':            
+        if self.dataset == 'train':
             video = image_transform(video)
 
         video = torch_normalize(video.float())
