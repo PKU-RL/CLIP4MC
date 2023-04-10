@@ -1,0 +1,95 @@
+data_config:
+  image_size : &image_size
+    - 160
+    - 256
+ 
+  image_mean :
+    - 0.3331
+    - 0.3245
+    - 0.3051
+
+  image_std :
+    - 0.2439
+    - 0.2493
+    - 0.2873
+  
+  clip_frame : 16
+
+vit_config:
+  pretrained_resolution : 224
+  image_resolution: *image_size
+  patch_size : 16
+  width : 768
+  layers : 12
+  heads : 12
+  output_dim : 512
+
+gpt_config:
+  embed_dim : 512
+  context_length : 77
+  vocab_size : 49408
+  layers : 12
+  width : 512
+  heads : 8
+
+video_adapter_config:
+  adapter_layers: 2
+  feature_dim: 512
+
+text_adapter_config:
+  adapter_layers: 0
+  feature_dim: 512
+
+motion_adapter_config:
+  adapter_layers: 2
+  feature_dim: 512
+
+action_adapter_config:
+  adapter_layers: 2
+  feature_dim: 512
+
+temporal_encoder_config:
+  input_dim: 512
+  embed_dim:
+  depth: 2
+  num_heads: 8
+  max_seq_len: 80
+  ff_glu: True
+  ff_swish: True
+  attn_one_kv_head: False
+  rel_pos_bias: False
+
+brief_text_encoder_config:
+  input_dim: 512
+  embed_dim:
+  depth: 2
+  num_heads: 8
+  max_seq_len: 80
+  ff_glu: True
+  ff_swish: True
+  attn_one_kv_head: False
+  rel_pos_bias: False
+
+difference_encoder_config:
+  input_dim: 512
+  embed_dim:
+  depth: 2
+  num_heads: 8
+  max_seq_len: 32
+  ff_glu: True
+  ff_swish: True
+  attn_one_kv_head: False
+  rel_pos_bias: False
+
+temporal_difference_encoder_config:
+  input_dim: 512
+  embed_dim:
+  depth: 2
+  num_heads: 8
+  max_seq_len: 32
+  ff_glu: True
+  ff_swish: True
+  attn_one_kv_head: False
+  rel_pos_bias: False
+
+
