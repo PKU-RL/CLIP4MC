@@ -16,9 +16,9 @@ CLIP4MC is a Vision-Language model for Minecraft, aligning actions implicitly co
 ## Demonstrations  
 Here are some demonstrations of agent trained with CLIP4MC.
 
-|                                   Harvest a leaf                                   |                                 Milk a cow                                  |                                   Shear a sheep                                   |
-|:----------------------------------------------------------------------------------:|:---------------------------------------------------------------------------:|:---------------------------------------------------------------------------------:|
-| <img src="figs/harvest_a_leaf.gif" width="250" a="a gif of task 'Harvest a leaf'"/> | <img src="figs/milk_a_cow.gif" width="250" a="a gif of task 'Milk a cow'"/> | <img src="figs/shear_a_sheep.gif" width="250" a="a gif of task 'Shear a sheep'"/> |
+|                                   Harvest a leaf                                    |                                 Milk a cow                                  |                                   Shear a sheep                                   |
+|:-----------------------------------------------------------------------------------:|:---------------------------------------------------------------------------:|:---------------------------------------------------------------------------------:|
+| <img src="figs/harvest_a_leaf.gif" width="245" a="a gif of task 'Harvest a leaf'"/> | <img src="figs/milk_a_cow.gif" width="245" a="a gif of task 'Milk a cow'"/> | <img src="figs/shear_a_sheep.gif" width="245" a="a gif of task 'Shear a sheep'"/> |
 
 ## Requirements
 
