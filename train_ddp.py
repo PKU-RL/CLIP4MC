@@ -300,7 +300,7 @@ def main(args):
     # Train!
     global_step = 0
     for epoch in range(args.epochs):
-        # train_sampler.set_epoch(epoch)
+        train_sampler.set_epoch(epoch)
         test_sampler.set_epoch(epoch)
         tr_loss, global_step = train_epoch(epoch, args, model, train_dataloader, device, optimizer,
                                            scheduler, global_step)
