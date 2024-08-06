@@ -1,1 +1,1 @@
-from .dataloader import get_naive_dataloader
+from .dataloader import get_naive_dataloader, get_new_dataloader

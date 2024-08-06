@@ -384,3 +384,10 @@ def build_logit_scale(pretrained_clip=None):
     else:
         logit_scale = nn.Parameter(torch.ones([]) * np.log(1 / 0.07))
     return logit_scale
+
+
+if __name__ == '__main__':
+    model = GPT(512, 77, 49408, 12, 512, 8)
+    # model = VisionTransformer(224,16,768,12,12,512)
+    for name, para in model.named_parameters():
+        print(name, para.shape)

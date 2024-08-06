@@ -15,3 +15,4 @@ def compute_metrics(x):
             'MedianR': np.median(ind) + 1,
             'MeanR': np.mean(ind) + 1,
             }
+    # metrics["cols"] = [int(i) for i in list(ind)]

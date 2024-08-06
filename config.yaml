@@ -1,19 +1,35 @@
 data_config:
-  image_size : &image_size
+  clip_word_length: 25
+  clip_word_stride: 30
+
+  tokenizer: clip
+  tokenize_max_length: &token_length 77
+  hidden_state_max_length: 20
+
+  summary_model: sshleifer/distilbart-cnn-12-6
+  summary_max_length: 30
+  summary_min_length: 20
+
+  image_size: &image_size
     - 160
     - 256
- 
-  image_mean :
+
+  image_mean:
     - 0.3331
     - 0.3245
     - 0.3051
 
-  image_std :
+  image_std:
     - 0.2439
     - 0.2493
     - 0.2873
-  
-  clip_frame : 16
+
+  clip_frame_num: 80
+  video_clip_length: 16
+
+  test_ratio: 0.00625
+  val_ratio: 0.00625
+
 
 vit_config:
   pretrained_resolution : 224
@@ -26,11 +42,16 @@ vit_config:
 
 gpt_config:
   embed_dim : 512
-  context_length : 77
+  context_length : *token_length
   vocab_size : 49408
   layers : 12
   width : 512
   heads : 8
+
+adapter_config:
+  video_adapter_layers: 2
+  text_adapter_layers: 2
+  feature_dim: 512
 
 video_adapter_config:
   adapter_layers: 2
@@ -53,13 +74,24 @@ temporal_encoder_config:
   embed_dim:
   depth: 2
   num_heads: 8
-  max_seq_len: 80
+  max_seq_len: 32 # 80
   ff_glu: True
   ff_swish: True
   attn_one_kv_head: False
   rel_pos_bias: False
 
-brief_text_encoder_config:
+fuse_encoder_config:
+  input_dim: 512
+  embed_dim:
+  depth: 2
+  num_heads: 8
+  max_seq_len: 32
+  ff_glu: True
+  ff_swish: True
+  attn_one_kv_head: False
+  rel_pos_bias: False
+
+text_encoder_config:
   input_dim: 512
   embed_dim:
   depth: 2
@@ -92,4 +124,13 @@ temporal_difference_encoder_config:
   attn_one_kv_head: False
   rel_pos_bias: False
 
-
+text_action_encoder_config:
+  input_dim: 512
+  embed_dim:
+  depth: 2
+  num_heads: 8
+  max_seq_len: 32
+  ff_glu: True
+  ff_swish: True
+  attn_one_kv_head: False
+  rel_pos_bias: False

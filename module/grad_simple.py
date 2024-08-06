@@ -5,21 +5,10 @@ import torch.nn.functional as F
 import random
 from functools import lru_cache
 
+
 class CrossEn(nn.Module):
     def __init__(self, ):
         super(CrossEn, self).__init__()
-
-    def forward(self, sim_matrix):
-        pt = sim_matrix.softmax(dim=-1) + 1e-8  # [B,B]
-        logpt = pt.log()
-        logpt = torch.diag(logpt)
-        nce_loss = -logpt
-        sim_loss = nce_loss.mean()
-        return sim_loss
-    
-class CrossEn_Swap(nn.Module):
-    def __init__(self, ):
-        super(CrossEn_Swap, self).__init__()
 
     def forward(self, sim_matrix, gamma_vals=None):
         pt0 = sim_matrix.softmax(dim=-1) + 1e-8
@@ -29,8 +18,8 @@ class CrossEn_Swap(nn.Module):
         if gamma_vals != None:
             pt_list = []
             for i in range(len(gamma_vals)):
-
-                if random.random() > gamma_vals[i]:
+                #print(gamma_vals[i])
+                if gamma_vals[i] != 1 and random.random()>0.6:
                     
                     pt_tmp = torch.zeros_like(pt0[i])
                     pt_tmp[1:i-1] = pt0[i,1:i-1]
@@ -38,7 +27,7 @@ class CrossEn_Swap(nn.Module):
                     pt_tmp[0] = pt0[i,i]
                     pt_tmp[i] = pt0[i,0]
                     pt_list.append(pt_tmp)
-
+                    #pt_list.append(pt0[i].pow(gamma_vals[i]))
                 else:
                     pt_list.append(pt0[i])
                     

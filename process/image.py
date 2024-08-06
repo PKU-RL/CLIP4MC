@@ -1,26 +1,13 @@
-from __future__ import absolute_import
 from __future__ import annotations
+from __future__ import absolute_import
 from __future__ import division
-from __future__ import print_function
 from __future__ import unicode_literals
+from __future__ import print_function
 
-import os
-import pickle
-from functools import lru_cache
-from typing import *
-
-import numpy as np
 import torch
-import yaml
 from torchvision import transforms
 
-with open('config.yaml', 'r') as f:
-    config = yaml.safe_load(f)['data_config']
-
-MC_IMAGE_SIZE = config['image_size']
-MC_IMAGE_MEAN = config['image_mean']
-MC_IMAGE_STD = config['image_std']
-CLIP_FRAME_NUM = config['clip_frame']
+from .static import MC_IMAGE_MEAN, MC_IMAGE_STD, MC_IMAGE_SIZE
 
 
 def torch_normalize(tensor: torch.Tensor, mean=MC_IMAGE_MEAN, std=MC_IMAGE_STD, inplace=False):
@@ -70,36 +57,3 @@ def torch_normalize(tensor: torch.Tensor, mean=MC_IMAGE_MEAN, std=MC_IMAGE_STD, 
 image_transform = transforms.Compose([
     transforms.RandomResizedCrop(MC_IMAGE_SIZE, scale=(0.2, 1.), interpolation=transforms.InterpolationMode.BICUBIC),
 ])
-
-
-@lru_cache(None)
-def get_processed_list(dataset_log_file: str, dataset: Literal['train', 'test'] = None):
-    import json
-    with open(dataset_log_file, 'r') as f:
-        datasets = json.load(f)
-    if dataset is None:
-        return datasets
-    assert dataset in datasets, f'No such dataset {dataset}.'
-    return datasets[dataset]
-
-
-def get_processed_len(dataset_log_file, dataset: Literal["train", "test"] = None):
-    return len(get_processed_list(dataset_log_file, dataset))
-
-
-def load_processed_data(dataset_log_file, data_id: int, use_mask: bool = True,
-                        dataset: Literal["train", "test"] = None):
-    processed_list = get_processed_list(dataset_log_file, dataset)
-
-    assert data_id < len(processed_list), \
-        f'Index {data_id} is beyond the length of processed {dataset} dataset, {len(processed_list)}. '
-
-    file_path = processed_list[data_id]
-    with open(os.path.join(file_path, 'text_input.pkl'), 'rb') as f:
-        text_input = pickle.load(f)
-    with open(os.path.join(file_path, 'video_input.pkl'), 'rb') as f:
-        video_input = pickle.load(f)
-    T = len(video_input)
-    gap = T // CLIP_FRAME_NUM
-    video_input = np.array(video_input[::gap])
-    return (video_input, *text_input) if use_mask else (video_input, text_input)

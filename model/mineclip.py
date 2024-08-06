@@ -11,7 +11,7 @@ from typing import *
 
 from module import build_GPT, build_ViT, build_logit_scale, build_adapter, build_sequence_encoder
 
-from module import CrossEn_Swap, AllGather, VisionTransformer, GPT, AdapterHead, SequenceTransformer
+from module import CrossEn, AllGather, VisionTransformer, GPT, AdapterHead, SequenceTransformer
 
 allgather = AllGather.apply
 
@@ -31,7 +31,7 @@ def select_embedding(embedding, mask, seq_len):
     return torch.stack(ans_embedding, dim=0), torch.stack(ans_embedding_mask, dim=0)
 
 
-class CLIP4MC(nn.Module):
+class NaiveCLIP(nn.Module):
     def __init__(self,
                  frame_num: int,
                  use_brief_text: bool,
@@ -74,7 +74,7 @@ class CLIP4MC(nn.Module):
         self.use_action = use_action
         self.use_brief_text = use_brief_text
 
-        self.loss_fct = CrossEn_Swap()
+        self.loss_fct = CrossEn()
 
     def get_layer(self, layer: int, layer_type: Literal['video', 'text', 'cross']):
         if layer_type == 'video':
@@ -138,7 +138,7 @@ class CLIP4MC(nn.Module):
         return logit1
 
 
-    def forward(self, text, entity_mask, action_mask, size, video, motion_input=None, train=False, all_gather=True):
+    def forward(self, text, video, motion_input=None, train=False, all_gather=True):
         # video: (batch, frames, channels, height, width)
         # text: (batch, tokens)
         B, T, C, H, W = video.shape
@@ -156,25 +156,12 @@ class CLIP4MC(nn.Module):
 
 
         if train:
-            size_weight = 1.0
-            size_thred = 0.02
-            size_sum = 0
-            weight_sum = 0
-            size_final, size_idx = torch.max(size[:,:], -1)
-
-            gamma_vals = []
-            for i in range(B):
-                if size_final[i] > size_thred:
-                    gamma_val = 1
-                else:
-                    gamma_val = 0.5 + size_final[i] * 0.5 / size_thred
-                gamma_vals.append(gamma_val)
 
             v2t_matrix = video_embedding @ text_embedding.t()
             v2t_matrix = self.logit_scale.exp() * v2t_matrix
             t2v_matrix = v2t_matrix.t()
 
-            loss = (self.loss_fct(v2t_matrix, gamma_vals) + self.loss_fct(t2v_matrix, gamma_vals)) / 2
+            loss = (self.loss_fct(v2t_matrix) + self.loss_fct(t2v_matrix)) / 2
 
             return loss
         else:

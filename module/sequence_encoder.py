@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 from x_transformers.x_transformers import Encoder, ContinuousTransformerWrapper
 
@@ -94,6 +95,7 @@ def build_sequence_encoder(config_name):
                              depth=config['depth'],
                              num_heads=config['num_heads'],
                              max_seq_len=config['max_seq_len'],
+                             # max_seq_len=80,
                              ff_glu=config['ff_glu'],
                              ff_swish=config['ff_swish'],
                              attn_one_kv_head=config['attn_one_kv_head'],

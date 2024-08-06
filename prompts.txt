@@ -1,0 +1,33 @@
+obtain milk from a cow with an empty bucket and a cow nearby
+shear a sheep with shears and a sheep nearby
+hunt a horse with a diamond sword, shield, and a full suite of diamond armors
+find material and craft to obtain furnace in jungle given a crafting table
+combat a slime in night swampland with a diamond sword, shield, and a full suite of diamond armors
+hunt a cow with a diamond sword, shield, and a full suite of iron armors
+starting from diamond tools, craft and use a redstone lamp
+obtain 8 cobblestone with diamond pickaxe
+obtain 8 chicken
+hunt a bat in night forest with a wooden sword, shield, and a full suite of iron armors
+obtain iron ore with wooden pickaxe
+find material and craft to obtain 8 fence
+starting from iron tools, craft and use a golden sword
+find material and craft to obtain 8 shield
+combat a blaze in nether with a diamond sword, shield, and a full suite of iron armors
+obtain redstone with golden pickaxe
+find material and craft to obtain 8 ender chest
+hunt a horse in plains with a wooden sword, shield, and a full suite of leather armors
+starting from gold tools, craft and use a detector rail
+find material and smelt to obtain cooked beef in taiga
+find material and smelt to obtain 8 iron ingot in plains
+combat a witch in night extreme hills with a wooden sword, shield, and a full suite of iron armors
+find material and craft a diamond chestplate
+obtain 8 string
+find material and smelt to obtain 8 stone in taiga
+find material and smelt to obtain 8 gold ingot in plains given a furnace and fuels
+find material and craft to obtain 8 shield in plains
+find material and craft to obtain 8 bucket in jungle given a crafting table
+obtain bone in jungle
+obtain 8 coal
+find material and craft to obtain shield in jungle
+combat a skeleton in night plains with a wooden sword, shield, and a full suite of diamond armors
+combat a blaze in nether with a iron sword, shield, and a full suite of diamond armors
