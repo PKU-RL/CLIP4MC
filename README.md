@@ -1,14 +1,16 @@
 # Reinforcement Learning Friendly Vision-Language Model for MineCraft
 
+<div align="center">
 [[ECCV 2024]](https://arxiv.org/pdf/2303.10571)
 
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/MineDojo)](https://pypi.org/project/MineDojo/)
 [<img src="https://img.shields.io/badge/Framework-PyTorch-red.svg"/>](https://pytorch.org/)
 [![GitHub license](https://img.shields.io/github/license/MineDojo/MineCLIP)](https://github.com/PKU-RL/Plan4MC/blob/main/LICENSE)
+</div>
 
 We propose a novel cross-modal contrastive learning framework architecture, CLIP4MC, aiming to learn a reinforcement learning (RL) friendly vision-language model (VLM) that serves as an intrinsic reward function for open-ended tasks. Simply utilizing the similarity between the video snippet and the language prompt is not RL-friendly since standard VLMs may only capture the similarity at a coarse level. To achieve RL-friendliness, we incorporate the **task completion degree** into the VLM training objective, as this information can assist agents in distinguishing the importance between different states. 
 
-<img src="/Users/jianghaobin/Documents/Study/AI@Edge/CLIP4MC/repo/CLIP4MC/figs/arch.png" alt="arch" style="zoom:30%;" />
+<img src="figs/arch.png" alt="arch" style="zoom:30%;" />
 
 Moreover, we provide **neat YouTube datasets** based on the large-scale YouTube database provided by MineDojo. Specifically, two rounds of filtering operations guarantee that the dataset covers enough essential information and that the video-text pair is highly correlated. Empirically, we demonstrate that the proposed method achieves better performance on RL tasks compared with baselines.
 
